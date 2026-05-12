@@ -17,26 +17,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug - List files
-        run: |
-          echo "=== Repository structure ==="
-          find . -type f -name "*.md" | head -20
-          echo ""
-          echo "=== docs folder ==="
-          ls -la docs/ 2>/dev/null || echo "docs folder not found"
-
-      - uses: baileyjm02/markdown-to-pdf@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          input_dir: docs
-          output_dir: pdfs
-          images_dir: docs/images
-          image_import: ./docs/images
-          build_html: false
+          node-version: '20'
 
-      - name: Debug - Check output
+      - name: Install markdown-pdf
+        run: npm install -g markdown-pdf
+
+      - name: Create output directory
+        run: mkdir -p pdfs
+
+      - name: Convert MD to PDF
         run: |
-          echo "=== pdfs folder ==="
-          ls -la pdfs/ 2>/dev/null || echo "pdfs folder not found"
+          for file in docs/**/*.md; do
+            filename=$(basename "$file" .md)
+            markdown-pdf "$file" -o "pdfs/${filename}.pdf"
+          done
+
+      - name: List generated PDFs
+        run: ls -la pdfs/
 
       - uses: actions/upload-artifact@v4
         with:
